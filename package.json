@@ -13,238 +13,8 @@
     "test:unit:watch": "yarn run test:unit -- --watch",
     "postinstall": "webpack --config-name hyper-app && electron-builder install-app-deps && yarn run rebuild-node-pty && cpy --cwd=target --parents \"node_modules/**/*\" \"../app/\"",
     "rebuild-node-pty": "electron-rebuild -f -w target/node_modules/node-pty -m target",
-    "dist": "yarn run build && cross-env BABEL_ENV=production babel --out-file target/renderer/bundle.js --no-comments --minified target/renderer/bundle.js && electron-builder",
+    "dist": "yarn run build && cross-env BABEL_ENV=production babel target/renderer/bundle.js --out-file target/renderer/bundle.js --no-comments --minified && electron-builder",
     "clean": "node ./bin/rimraf-standalone.js node_modules && node ./bin/rimraf-standalone.js ./app/node_modules && node ./bin/rimraf-standalone.js ./app/renderer"
-  },
-  "ava": {
-    "files": [
-      "test/unit/*"
-    ],
-    "helpers": [
-      "**/testUtils/**/*"
-    ],
-    "compileEnhancements": false,
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register/transpile-only"
-    ]
-  },
-  "eslintConfig": {
-    "plugins": [
-      "react",
-      "prettier",
-      "@typescript-eslint"
-    ],
-    "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:prettier/recommended"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 8,
-      "sourceType": "module",
-      "ecmaFeatures": {
-        "jsx": true,
-        "impliedStrict": true,
-        "experimentalObjectRestSpread": true
-      },
-      "allowImportExportEverywhere": true
-    },
-    "env": {
-      "es6": true,
-      "browser": true,
-      "node": true
-    },
-    "settings": {
-      "react": {
-        "version": "detect"
-      }
-    },
-    "rules": {
-      "func-names": [
-        "error",
-        "as-needed"
-      ],
-      "no-shadow": "error",
-      "no-extra-semi": 0,
-      "react/prop-types": 0,
-      "react/react-in-jsx-scope": 0,
-      "react/no-unescaped-entities": 0,
-      "react/jsx-no-target-blank": 0,
-      "react/no-string-refs": 0,
-      "prettier/prettier": [
-        "error",
-        {
-          "printWidth": 120,
-          "tabWidth": 2,
-          "singleQuote": true,
-          "trailingComma": "none",
-          "bracketSpacing": false,
-          "semi": true,
-          "useTabs": false,
-          "jsxBracketSameLine": false
-        }
-      ]
-    },
-    "overrides": [
-      {
-        "files": [
-          "app/config/config-default.js",
-          ".hyper.js"
-        ],
-        "rules": {
-          "prettier/prettier": [
-            "error",
-            {
-              "printWidth": 120,
-              "tabWidth": 2,
-              "singleQuote": true,
-              "trailingComma": "es5",
-              "bracketSpacing": false,
-              "semi": true,
-              "useTabs": false,
-              "parser": "babel",
-              "jsxBracketSameLine": false
-            }
-          ]
-        }
-      },
-      {
-        "files": [
-          "**.ts",
-          "**.tsx"
-        ],
-        "extends": [
-          "plugin:@typescript-eslint/recommended",
-          "prettier/@typescript-eslint"
-        ],
-        "rules": {
-          "@typescript-eslint/explicit-function-return-type": "off",
-          "@typescript-eslint/no-explicit-any": "off",
-          "@typescript-eslint/no-non-null-assertion": "off"
-        }
-      }
-    ]
-  },
-  "babel": {
-    "presets": [
-      "@babel/react",
-      "@babel/typescript"
-    ],
-    "plugins": [
-      [
-        "styled-jsx/babel",
-        {
-          "vendorPrefixes": false
-        }
-      ],
-      "@babel/plugin-proposal-numeric-separator",
-      "@babel/proposal-class-properties",
-      "@babel/proposal-object-rest-spread",
-      "@babel/plugin-proposal-optional-chaining"
-    ],
-    "env": {
-      "production": {
-        "plugins": [
-          "minify-constant-folding",
-          "minify-dead-code-elimination",
-          "minify-flip-comparisons",
-          "minify-guarded-expressions",
-          "minify-infinity",
-          [
-            "minify-mangle-names",
-            {
-              "keepClassName": true,
-              "keepFnName": true
-            }
-          ],
-          "minify-replace",
-          "minify-simplify",
-          "minify-type-constructors",
-          "transform-member-expression-literals",
-          "transform-merge-sibling-variables",
-          "transform-minify-booleans",
-          "transform-property-literals",
-          "transform-simplify-comparison-operators",
-          "transform-undefined-to-void"
-        ]
-      }
-    }
-  },
-  "build": {
-    "appId": "co.zeit.hyper",
-    "directories": {
-      "app": "target"
-    },
-    "extraResources": [
-      "./bin/yarn-standalone.js",
-      "./bin/cli.js",
-      {
-        "from": "./build/${os}/",
-        "to": "./bin/",
-        "filter": [
-          "hyper*"
-        ]
-      }
-    ],
-    "linux": {
-      "category": "TerminalEmulator",
-      "target": [
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "snap",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "win": {
-      "target": [
-        "squirrel"
-      ],
-      "rfc3161TimeStampServer": "http://timestamp.comodoca.com"
-    },
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "extendInfo": "build/Info.plist",
-      "darkModeSupport": true
-    },
-    "deb": {
-      "afterInstall": "./build/linux/after-install.tpl"
-    },
-    "rpm": {
-      "afterInstall": "./build/linux/after-install.tpl"
-    },
-    "snap": {
-      "confinement": "classic"
-    },
-    "protocols": {
-      "name": "ssh URL",
-      "schemes": [
-        "ssh"
-      ]
-    }
   },
   "license": "MIT",
   "author": {
@@ -256,8 +26,8 @@
     "chalk": "3.0.0",
     "color": "3.1.2",
     "columnify": "1.5.4",
-    "css-loader": "3.3.2",
-    "got": "10.0.4",
+    "css-loader": "3.4.0",
+    "got": "10.2.0",
     "json-loader": "0.5.7",
     "mousetrap": "chabou/mousetrap#useCapture",
     "ms": "2.1.2",
@@ -270,7 +40,7 @@
     "react-dom": "16.12.0",
     "react-redux": "7.1.3",
     "recast": "0.18.5",
-    "redux": "4.0.4",
+    "redux": "4.0.5",
     "redux-thunk": "2.3.0",
     "reselect": "4.0.0",
     "seamless-immutable": "7.1.4",
@@ -288,11 +58,11 @@
     "xterm-addon-webgl": "^0.4.1"
   },
   "devDependencies": {
-    "@babel/cli": "7.7.0",
+    "@babel/cli": "7.7.7",
     "@babel/core": "7.7.7",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
     "@babel/plugin-proposal-numeric-separator": "^7.7.4",
-    "@babel/plugin-proposal-object-rest-spread": "^7.7.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.7.7",
     "@babel/plugin-proposal-optional-chaining": "7.7.5",
     "@babel/preset-react": "7.7.4",
     "@babel/preset-typescript": "7.7.7",
@@ -300,24 +70,28 @@
     "@types/color": "3.0.0",
     "@types/columnify": "^1.5.0",
     "@types/electron-devtools-installer": "2.2.0",
+    "@types/fs-extra": "8.0.1",
+    "@types/mkdirp": "0.5.2",
     "@types/mousetrap": "^1.6.3",
+    "@types/ms": "0.7.31",
     "@types/node": "^12.12.21",
     "@types/pify": "3.0.2",
     "@types/plist": "3.0.2",
-    "@types/react": "^16.9.16",
+    "@types/react": "^16.9.17",
     "@types/react-dom": "^16.9.4",
     "@types/react-redux": "^7.1.5",
     "@types/seamless-immutable": "7.1.11",
     "@types/styled-jsx": "2.2.8",
     "@types/uuid": "3.4.6",
     "@types/webdriverio": "^4.8.0",
-    "@typescript-eslint/eslint-plugin": "2.11.0",
-    "@typescript-eslint/parser": "2.12.0",
+    "@types/winreg": "1.2.30",
+    "@typescript-eslint/eslint-plugin": "2.13.0",
+    "@typescript-eslint/parser": "2.13.0",
     "ava": "2.4.0",
     "babel-loader": "8.0.6",
     "babel-preset-minify": "0.5.1",
     "concurrently": "5.0.2",
-    "copy-webpack-plugin": "5.0.5",
+    "copy-webpack-plugin": "5.1.1",
     "cpy-cli": "^2.0.0",
     "cross-env": "6.0.3",
     "electron": "^7.1.7",
@@ -325,8 +99,8 @@
     "electron-builder-squirrel-windows": "22.2.0",
     "electron-devtools-installer": "2.2.4",
     "electron-rebuild": "1.8.8",
-    "eslint": "6.7.2",
-    "eslint-config-prettier": "6.7.0",
+    "eslint": "6.8.0",
+    "eslint-config-prettier": "6.9.0",
     "eslint-plugin-prettier": "3.1.2",
     "eslint-plugin-react": "7.17.0",
     "husky": "3.1.0",
@@ -336,15 +110,11 @@
     "plist": "3.0.1",
     "prettier": "1.19.1",
     "proxyquire": "2.1.3",
+    "redux-devtools-extension": "2.13.8",
     "spectron": "9.0.0",
-    "style-loader": "1.1.1",
+    "style-loader": "1.1.2",
     "ts-node": "8.5.4",
-    "typescript": "3.7.3",
-    "webpack": "4.41.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-push": "yarn test"
-    }
+    "typescript": "3.7.4",
+    "webpack": "4.41.5"
   }
 }

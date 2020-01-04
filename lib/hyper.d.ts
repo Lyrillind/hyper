@@ -1,4 +1,3 @@
-import {Reducer} from 'redux';
 import {Immutable} from 'seamless-immutable';
 
 declare global {
@@ -26,10 +25,8 @@ export type ITermState = {
   activeRootGroup: string | null;
 };
 
-export type ITermGroupReducer = Reducer<Immutable<ITermState>, any>;
-
 export type uiState = {
-  _lastUpdate: null;
+  _lastUpdate: number | null;
   activeUid: string | null;
   activityMarkers: Record<string, boolean>;
   backgroundColor: string;
@@ -77,8 +74,8 @@ export type uiState = {
   macOptionSelectionMode: string;
   maximized: boolean;
   messageDismissable: null | boolean;
-  messageText: null;
-  messageURL: null;
+  messageText: string | null;
+  messageURL: string | null;
   modifierKeys: {
     altIsMeta: boolean;
     cmdIsMeta: boolean;
@@ -107,7 +104,6 @@ export type uiState = {
   webGLRenderer: boolean;
 };
 
-export type IUiReducer = Reducer<Immutable<uiState>>;
 export type session = {
   cleared: boolean;
   cols: number | null;
@@ -115,7 +111,7 @@ export type session = {
   resizeAt?: number;
   rows: number | null;
   search: boolean;
-  shell: string;
+  shell: string | null;
   title: string;
   uid: string;
   url: string | null;
@@ -128,7 +124,14 @@ export type sessionState = {
   write?: any;
 };
 
-export type ISessionReducer = Reducer<Immutable<sessionState>>;
+export {ITermGroupReducer} from './reducers/term-groups';
+import {ITermGroupReducer} from './reducers/term-groups';
+
+export {IUiReducer} from './reducers/ui';
+import {IUiReducer} from './reducers/ui';
+
+export {ISessionReducer} from './reducers/sessions';
+import {ISessionReducer} from './reducers/sessions';
 
 export type hyperPlugin = {
   getTabProps: any;
@@ -155,7 +158,32 @@ export type hyperPlugin = {
 import rootReducer from './reducers/index';
 export type HyperState = ReturnType<typeof rootReducer>;
 
+import {UIActions} from './constants/ui';
+import {ConfigActions} from './constants/config';
+import {SessionActions} from './constants/sessions';
+import {NotificationActions} from './constants/notifications';
+import {UpdateActions} from './constants/updater';
+import {TermGroupActions} from './constants/term-groups';
+import {InitActions} from './constants';
+import {TabActions} from './constants/tabs';
+
+export type HyperActions = (
+  | UIActions
+  | ConfigActions
+  | SessionActions
+  | NotificationActions
+  | UpdateActions
+  | TermGroupActions
+  | InitActions
+  | TabActions
+) & {effect?: () => void};
+
 type immutableRecord<T> = {[k in keyof T]: Immutable<T[k]>};
+
+import {ThunkDispatch} from 'redux-thunk';
+import configureStore from './store/configure-store';
+export type HyperThunkDispatch = ThunkDispatch<HyperState, undefined, HyperActions>;
+export type HyperDispatch = ReturnType<typeof configureStore>['dispatch'];
 
 export type TermsProps = {
   activeRootGroup: string | null;
