@@ -1,3 +1,4 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {app, dialog, BrowserWindow, App} from 'electron';
 import {resolve, basename} from 'path';
@@ -12,6 +13,7 @@ import {availableExtensions} from './plugins/extensions';
 import {install} from './plugins/install';
 import {plugs} from './config/paths';
 import mapKeys from './utils/map-keys';
+import {configOptions} from '../lib/config';
 
 // local storage
 const cache = new Config();
@@ -81,7 +83,7 @@ function patchModuleLoad() {
 }
 
 function checkDeprecatedExtendKeymaps() {
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (plugin.extendKeymaps) {
       notify('Plugin warning!', `"${plugin._name}" use deprecated "extendKeymaps" handler`);
       return;
@@ -102,7 +104,6 @@ function updatePlugins({force = false} = {}) {
     updating = false;
 
     if (err) {
-      //eslint-disable-next-line no-console
       notify('Error updating plugins.', err, {error: err});
     } else {
       // flag successful plugin update
@@ -124,7 +125,7 @@ function updatePlugins({force = false} = {}) {
       cache.set('hyper.plugin-versions', pluginVersions);
 
       // notify watchers
-      watchers.forEach(fn => fn(err, {force}));
+      watchers.forEach((fn) => fn(err, {force}));
 
       if (force || changed) {
         if (changed) {
@@ -140,7 +141,7 @@ function updatePlugins({force = false} = {}) {
 
 function getPluginVersions() {
   const paths_ = paths.plugins.concat(paths.localPlugins);
-  return paths_.map(path_ => {
+  return paths_.map((path_) => {
     let version = null;
     try {
       version = require(resolve(path_, 'package.json')).version;
@@ -152,7 +153,7 @@ function getPluginVersions() {
 
 function clearCache() {
   // trigger unload hooks
-  modules.forEach(mod => {
+  modules.forEach((mod) => {
     if (mod.onUnload) {
       mod.onUnload(app);
     }
@@ -169,7 +170,7 @@ function clearCache() {
 export {updatePlugins};
 
 export const getLoadedPluginVersions = () => {
-  return modules.map(mod => ({name: mod._name, version: mod._version}));
+  return modules.map((mod) => ({name: mod._name, version: mod._version}));
 };
 
 // we schedule the initial plugins update
@@ -177,7 +178,6 @@ export const getLoadedPluginVersions = () => {
 // to prevent slowness
 if (cache.get('hyper.plugins') !== id || process.env.HYPER_FORCE_UPDATE) {
   // install immediately if the user changed plugins
-  //eslint-disable-next-line no-console
   console.log('plugins have changed / not init, scheduling plugins installation');
   setTimeout(() => {
     updatePlugins();
@@ -188,10 +188,7 @@ if (cache.get('hyper.plugins') !== id || process.env.HYPER_FORCE_UPDATE) {
   const baseConfig = config.getConfig();
   if (baseConfig['autoUpdatePlugins']) {
     // otherwise update plugins every 5 hours
-    setInterval(
-      updatePlugins,
-      ms(baseConfig['autoUpdatePlugins'] === true ? '5h' : (baseConfig['autoUpdatePlugins'] as string))
-    );
+    setInterval(updatePlugins, ms(baseConfig['autoUpdatePlugins'] === true ? '5h' : baseConfig['autoUpdatePlugins']));
   }
 })();
 
@@ -225,7 +222,7 @@ function alert(message: string) {
 
 function toDependencies(plugins_: {plugins: string[]}) {
   const obj: Record<string, string> = {};
-  plugins_.plugins.forEach(plugin => {
+  plugins_.plugins.forEach((plugin) => {
     const regex = /.(@|#)/;
     const match = regex.exec(plugin);
 
@@ -252,10 +249,10 @@ export const subscribe = (fn: Function) => {
 
 function getPaths() {
   return {
-    plugins: plugins.plugins.map(name => {
+    plugins: plugins.plugins.map((name) => {
       return resolve(path, 'node_modules', name.split('#')[0]);
     }),
-    localPlugins: plugins.localPlugins.map(name => {
+    localPlugins: plugins.localPlugins.map((name) => {
       return resolve(localPath, name);
     })
   };
@@ -276,7 +273,7 @@ function requirePlugins(): any[] {
     let mod: any;
     try {
       mod = require(path_);
-      const exposed = mod && Object.keys(mod).some(key => availableExtensions.has(key));
+      const exposed = mod && Object.keys(mod).some((key) => availableExtensions.has(key));
       if (!exposed) {
         notify('Plugin error!', `${`Plugin "${basename(path_)}" does not expose any `}Hyper extension API methods`);
         return;
@@ -287,16 +284,13 @@ function requirePlugins(): any[] {
       try {
         mod._version = require(resolve(path_, 'package.json')).version;
       } catch (err) {
-        //eslint-disable-next-line no-console
         console.warn(`No package.json found in ${path_}`);
       }
-      //eslint-disable-next-line no-console
       console.log(`Plugin ${mod._name} (${mod._version}) loaded.`);
 
       return mod;
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
-        //eslint-disable-next-line no-console
         console.warn(`Plugin error while loading "${basename(path_)}" (${path_}): ${err.message}`);
       } else {
         notify('Plugin error!', `Plugin "${basename(path_)}" failed to load (${err.message})`, {error: err});
@@ -307,11 +301,11 @@ function requirePlugins(): any[] {
   return plugins_
     .map(load)
     .concat(localPlugins.map(load))
-    .filter(v => Boolean(v));
+    .filter((v) => Boolean(v));
 }
 
 export const onApp = (app_: App) => {
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (plugin.onApp) {
       try {
         plugin.onApp(app_);
@@ -325,7 +319,7 @@ export const onApp = (app_: App) => {
 };
 
 export const onWindowClass = (win: BrowserWindow) => {
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (plugin.onWindowClass) {
       try {
         plugin.onWindowClass(win);
@@ -339,7 +333,7 @@ export const onWindowClass = (win: BrowserWindow) => {
 };
 
 export const onWindow = (win: BrowserWindow) => {
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (plugin.onWindow) {
       try {
         plugin.onWindow(win);
@@ -356,7 +350,7 @@ export const onWindow = (win: BrowserWindow) => {
 // for all the available plugins
 function decorateEntity(base: any, key: string, type: 'object' | 'function') {
   let decorated = base;
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (plugin[key]) {
       let res;
       try {
@@ -376,7 +370,7 @@ function decorateEntity(base: any, key: string, type: 'object' | 'function') {
   return decorated;
 }
 
-function decorateObject(base: any, key: string) {
+function decorateObject<T>(base: T, key: string): T {
   return decorateEntity(base, key, 'object');
 }
 
@@ -385,14 +379,14 @@ function decorateClass(base: any, key: string) {
 }
 
 export const getDeprecatedConfig = () => {
-  const deprecated: Record<string, any> = {};
+  const deprecated: Record<string, {css: string[]}> = {};
   const baseConfig = config.getConfig();
-  modules.forEach(plugin => {
+  modules.forEach((plugin) => {
     if (!plugin.decorateConfig) {
       return;
     }
     // We need to clone config in case of plugin modifies config directly.
-    let configTmp;
+    let configTmp: configOptions;
     try {
       configTmp = plugin.decorateConfig(JSON.parse(JSON.stringify(baseConfig)));
     } catch (e) {

@@ -5,15 +5,16 @@ import _openConfig from './config/open';
 import win from './config/windows';
 import {cfgPath, cfgDir} from './config/paths';
 import {getColorMap} from './utils/colors';
+import {parsedConfig, configOptions} from '../lib/config';
 
-const watchers: any[] = [];
-let cfg: Record<string, any> = {};
+const watchers: Function[] = [];
+let cfg: parsedConfig = {} as any;
 let _watcher: fs.FSWatcher;
 
-export const getDeprecatedCSS = (config: Record<string, any>) => {
+export const getDeprecatedCSS = (config: configOptions) => {
   const deprecated: string[] = [];
   const deprecatedCSS = ['x-screen', 'x-row', 'cursor-node', '::selection'];
-  deprecatedCSS.forEach(css => {
+  deprecatedCSS.forEach((css) => {
     if ((config.css && config.css.includes(css)) || (config.termCSS && config.termCSS.includes(css))) {
       deprecated.push(css);
     }
@@ -43,7 +44,7 @@ const _watch = () => {
     setTimeout(() => {
       cfg = _import();
       notify('Configuration updated', 'Hyper configuration reloaded!');
-      watchers.forEach(fn => fn());
+      watchers.forEach((fn) => fn());
       checkDeprecatedConfig();
     }, 100);
   };
@@ -54,7 +55,6 @@ const _watch = () => {
     // https://github.com/zeit/hyper/pull/1772
     _watcher = fs.watchFile(cfgPath, {interval: 2000}, (curr, prev) => {
       if (!curr.mtime || curr.mtime.getTime() === 0) {
-        //eslint-disable-next-line no-console
         console.error('error watching config');
       } else if (curr.mtime.getTime() !== prev.mtime.getTime()) {
         onChange();
@@ -65,7 +65,7 @@ const _watch = () => {
   // macOS/Linux
   function setWatcher() {
     try {
-      _watcher = fs.watch(cfgPath, eventType => {
+      _watcher = fs.watch(cfgPath, (eventType) => {
         if (eventType === 'rename') {
           _watcher.close();
           // Ensure that new file has been written
@@ -73,13 +73,11 @@ const _watch = () => {
         }
       });
     } catch (e) {
-      //eslint-disable-next-line no-console
       console.error('Failed to watch config file:', cfgPath, e);
       return;
     }
     _watcher.on('change', onChange);
-    _watcher.on('error', error => {
-      //eslint-disable-next-line no-console
+    _watcher.on('error', (error) => {
       console.error('error watching config', error);
     });
   }
@@ -127,15 +125,15 @@ export const getWin = win.get;
 export const winRecord = win.recordState;
 export const windowDefaults = win.defaults;
 
-export const fixConfigDefaults = (decoratedConfig: any) => {
-  const defaultConfig = getDefaultConfig()?.config;
+export const fixConfigDefaults = (decoratedConfig: configOptions) => {
+  const defaultConfig = getDefaultConfig().config!;
   decoratedConfig.colors = getColorMap(decoratedConfig.colors) || {};
   // We must have default colors for xterm css.
-  decoratedConfig.colors = Object.assign({}, defaultConfig.colors, decoratedConfig.colors);
+  decoratedConfig.colors = {...defaultConfig.colors, ...decoratedConfig.colors};
   return decoratedConfig;
 };
 
-export const htermConfigTranslate = (config: Record<string, any>) => {
+export const htermConfigTranslate = (config: configOptions) => {
   const cssReplacements: Record<string, string> = {
     'x-screen x-row([ {.[])': '.xterm-rows > div$1',
     '.cursor-node([ {.[])': '.terminal-cursor$1',
@@ -143,7 +141,7 @@ export const htermConfigTranslate = (config: Record<string, any>) => {
     'x-screen a([ {.[])': '.terminal a$1',
     'x-row a([ {.[])': '.terminal a$1'
   };
-  Object.keys(cssReplacements).forEach(pattern => {
+  Object.keys(cssReplacements).forEach((pattern) => {
     const searchvalue = new RegExp(pattern, 'g');
     const newvalue = cssReplacements[pattern];
     config.css = config.css && config.css.replace(searchvalue, newvalue);

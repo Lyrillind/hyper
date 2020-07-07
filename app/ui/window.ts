@@ -1,7 +1,7 @@
 import {app, BrowserWindow, shell, Menu, BrowserWindowConstructorOptions} from 'electron';
 import {isAbsolute} from 'path';
 import {parse as parseUrl} from 'url';
-import uuid from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import fileUriToPath from 'file-uri-to-path';
 import isDev from 'electron-is-dev';
 import updater from '../updater';
@@ -21,7 +21,7 @@ export function newWindow(
   cfg: any,
   fn?: (win: BrowserWindow) => void
 ): BrowserWindow {
-  const classOpts = Object.assign({uid: uuid.v4()});
+  const classOpts = Object.assign({uid: uuidv4()});
   app.plugins.decorateWindowClass(classOpts);
 
   const winOpts = Object.assign(
@@ -106,13 +106,16 @@ export function newWindow(
     if (!isDev) {
       updater(window);
     } else {
-      //eslint-disable-next-line no-console
       console.log('ignoring auto updates during dev');
     }
   });
 
   function createSession(extraOptions: any = {}) {
-    const uid = uuid.v4();
+    const uid = uuidv4();
+    const extraOptionsFiltered: any = {};
+    Object.keys(extraOptions).forEach((key) => {
+      if (extraOptions[key] !== undefined) extraOptionsFiltered[key] = extraOptions[key];
+    });
 
     // remove the rows and cols, the wrong value of them will break layout when init create
     const defaultOptions = Object.assign(
@@ -122,7 +125,7 @@ export function newWindow(
         shell: cfg.shell,
         shellArgs: cfg.shellArgs && Array.from(cfg.shellArgs)
       },
-      extraOptions,
+      extraOptionsFiltered,
       {uid}
     );
     const options = decorateSessionOptions(defaultOptions);
@@ -132,7 +135,7 @@ export function newWindow(
     return {session, options};
   }
 
-  rpc.on('new', extraOptions => {
+  rpc.on('new', (extraOptions) => {
     const {session, options} = createSession(extraOptions);
 
     sessions.set(options.uid, session);
@@ -146,7 +149,7 @@ export function newWindow(
       activeUid: options.activeUid
     });
 
-    session.on('data', (data: any) => {
+    session.on('data', (data: string) => {
       rpc.emit('session data', data);
     });
 
@@ -199,7 +202,7 @@ export function newWindow(
   rpc.on('open external', ({url}) => {
     shell.openExternal(url);
   });
-  rpc.on('open context menu', selection => {
+  rpc.on('open context menu', (selection) => {
     const {createWindow} = app;
     const {buildFromTemplate} = Menu;
     buildFromTemplate(contextMenuTemplate(createWindow, selection)).popup({window});
@@ -220,7 +223,7 @@ export function newWindow(
   rpc.on('close', () => {
     window.close();
   });
-  rpc.on('command', command => {
+  rpc.on('command', (command) => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     execCommand(command, focusedWindow!);
   });
