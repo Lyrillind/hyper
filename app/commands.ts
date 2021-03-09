@@ -2,6 +2,7 @@ import {app, Menu, BrowserWindow} from 'electron';
 import {openConfig, getConfig} from './config';
 import {updatePlugins} from './plugins';
 import {installCLI} from './utils/cli-install';
+import * as systemContextMenu from './utils/system-context-menu';
 
 const commands: Record<string, (focusedWindow?: BrowserWindow) => void> = {
   'window:new': () => {
@@ -101,6 +102,15 @@ const commands: Record<string, (focusedWindow?: BrowserWindow) => void> = {
   'editor:break': (focusedWindow) => {
     focusedWindow?.rpc.emit('session break req');
   },
+  'editor:stop': (focusedWindow) => {
+    focusedWindow?.rpc.emit('session stop req');
+  },
+  'editor:quit': (focusedWindow) => {
+    focusedWindow?.rpc.emit('session quit req');
+  },
+  'editor:tmux': (focusedWindow) => {
+    focusedWindow?.rpc.emit('session tmux req');
+  },
   'editor:search': (focusedWindow) => {
     focusedWindow?.rpc.emit('session search');
   },
@@ -114,6 +124,15 @@ const commands: Record<string, (focusedWindow?: BrowserWindow) => void> = {
     if (process.platform !== 'darwin' && ['', true].includes(getConfig().showHamburgerMenu)) {
       Menu.getApplicationMenu()!.popup({x: 25, y: 22});
     }
+  },
+  'systemContextMenu:add': () => {
+    systemContextMenu.add();
+  },
+  'systemContextMenu:remove': () => {
+    systemContextMenu.remove();
+  },
+  'window:toggleKeepOnTop': (focusedWindow) => {
+    focusedWindow?.setAlwaysOnTop(!focusedWindow.isAlwaysOnTop());
   }
 };
 
